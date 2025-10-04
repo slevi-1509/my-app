@@ -1,0 +1,52 @@
+#root {
+  max-width: 1280px;
+  /* margin: 0 auto; */
+  padding-left: 2rem;
+  text-align: left;
+  /* color-scheme: dark; */
+  color: rgba(255, 255, 255, 0.87);
+  background-color: black;
+}
+
+table {
+  font-family: arial, sans-serif;
+  /* border-collapse: collapse; */
+  border: 1px solid #fffefe;
+  width: 100%;
+}
+thead {
+  color: #c7d140;
+  font-size: 0.8rem;
+}
+
+td, th {
+  border: 1px solid #000000 !important;
+  text-align: left;
+  padding: 7px;
+}
+
+tr:nth-child(odd) {
+  border: 1px solid #000000;
+  background-color: #685e5e;
+}
+
+tr:nth-child(even) {
+  border: 1px solid #000000;
+  background-color: #857c7c;
+}
+
+p {
+  height: fit-content;
+  margin-left: 0.5rem;
+  margin-bottom: 5px !important;
+}
+
+.device-info {
+  overflow: auto;
+  font-size: 0.9rem;
+  border: 3px solid darkgreen;
+  width: 90%;
+  max-width: 60rem;
+  height: 20rem;
+  padding: 0.5rem;
+}

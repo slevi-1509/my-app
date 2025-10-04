@@ -1,0 +1,17 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    image: backend:1.0.0
+    container_name: fastapi-backend
+    network_mode: "host"
+
+  frontend:
+    build: ./frontend
+    image: myapp/frontend:1.0.0 
+    container_name: react-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
