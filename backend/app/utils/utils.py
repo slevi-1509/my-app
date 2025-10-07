@@ -1,5 +1,5 @@
-from fastapi import WebSocket, WebSocketDisconnect
-import os
+# from fastapi import WebSocket, WebSocketDisconnect
+# import os
 from scapy.all import DNS, DNSQR, TCP, DHCP, Ether, IP
 from datetime import datetime
 from itertools import count
@@ -7,11 +7,11 @@ from scapy.all import sniff
 import redis
 import threading
 import ipaddress
-import json
+# import json
 import socket
 import nmap
-import requests
-import ast
+# import requests
+# import ast
 import time
 import config
 from models.PacketSummary import PackageSummary
@@ -37,9 +37,8 @@ def start_sniffer(interface, params):
         packets_to_send.clear()
         new_devices.clear()
         get_devices_from_redis(params.interface)
-        sniff(iface=interface, filter=filter, prn=lambda pkt: handle_packet(pkt, network, params.collect_data_time, params.iot_probability),
+        sniff(iface=interface, filter=filter, prn=lambda pkt: handle_packet(pkt, network, params.iot_probability),
                 count=int(params.no_of_packets), store=0)
-        # print (packets_to_send)
         if packets_to_send:
             thread = threading.Thread(target=handle_sending_packets, args=(params.ports_scan, params.os_detect, params.collect_data_time))
             thread.start()
@@ -59,7 +58,7 @@ def get_devices_from_redis(router_mac=None):
             config.registered_devices[key] = r.hgetall(key)
     return config.registered_devices
 
-def handle_packet(packet, network, collect_data_time, iot_probability):
+def handle_packet(packet, network, iot_probability):
     global device_mac
     if IP not in packet:
         return
