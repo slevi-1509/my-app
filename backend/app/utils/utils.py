@@ -53,7 +53,7 @@ def start_sniffer(interface, params):
         
 def get_devices_from_redis(router_mac=None):
     config.registered_devices.clear()
-    r = redis.Redis(host='localhost', port=config.REDIS_DEVICES_PORT, decode_responses=True)
+    r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_DEVICES_PORT, decode_responses=True)
     for key in r.keys():
         if r.hget(key, 'router_mac') == router_mac:
             config.registered_devices[key] = r.hgetall(key)

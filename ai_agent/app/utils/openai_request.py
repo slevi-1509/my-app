@@ -1,6 +1,10 @@
 from openai import OpenAI
 import logging
+from datetime import datetime
 import redis
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 def get_openai_response(api_key, new_devices: dict): #, data_queue: queue.Queue):
     devices_to_register = {}
@@ -69,5 +73,6 @@ def get_openai_response(api_key, new_devices: dict): #, data_queue: queue.Queue)
 
 def connect_redis(devices_to_register):
     r = redis.Redis(host='redis-devices', port=6379, decode_responses=True)
+    logger.info(f"{datetime.now().strftime('%H:%M:%S - %Y-%m-%d')} - Redis_Devices being updated...")
     for key, value in devices_to_register.items():
         r.hset(key, mapping=value)
