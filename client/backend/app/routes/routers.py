@@ -19,6 +19,11 @@ def read_root(request: Request):
 def getInterfaces(request: Request):
     return config.active_interfaces
 
+@router.get("/ifstring")
+def getIfString():
+    found_working_interfaces = interfaces.get_if_list()
+    return found_working_interfaces
+
 @router.get("/devices")
 def getDevices(request: Request):
     # print("devices", config.registered_devices)
