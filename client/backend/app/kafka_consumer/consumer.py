@@ -1,8 +1,12 @@
 from confluent_kafka import Consumer
 from confluent_kafka.admin import AdminClient, NewTopic
+import logging
 import json
-import config
+import config as config
 import time
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 KAFKA_BROKER_URL = config.KAFKA_BROKER_URL
 print(f"KAFKA_BROKER_URL: {KAFKA_BROKER_URL}")
@@ -18,7 +22,7 @@ def create_topic():
         admin_client = AdminClient(conf)
         metadata = admin_client.list_topics(timeout=10)
         if KAFKA_TOPIC in metadata.topics:
-            print(f"Topic '{KAFKA_TOPIC}' already exists.")
+            logger.info(f"Topic '{KAFKA_TOPIC}' already exists.")
             return True
         # Define new topic
         new_topic = NewTopic(
@@ -34,18 +38,18 @@ def create_topic():
         for topic, f in fs.items():
             try:
                 f.result()  # The result itself is None if successful
-                print(f"✅ Topic '{topic}' created successfully")
+                logger.info(f"✅ Topic '{topic}' created successfully")
             except Exception as e:
-                print(f"⚠️ Failed to create topic '{topic}': {e}")
+                logger.error(f"⚠️ Failed to create topic '{topic}': {e}")
         return True
     except Exception as e:
-        print(f"Error checking for topic: {e}")
+        logger.error(f"Error checking for topic: {e}")
         return False
 
 
 def consume_messages():
     if not create_topic():
-        print("Failed to check topics, exiting consumer.")
+        logger.error("Failed to check topics, exiting consumer.")
         return
     consumer = Consumer({
     'bootstrap.servers': KAFKA_BROKER_URL,
@@ -54,25 +58,19 @@ def consume_messages():
     })
     consumer.subscribe([KAFKA_TOPIC])
     time.sleep(3)
-    print("Starting to consume messages...")
+    logger.info("Starting to consume messages...")
     while True:
         msg = consumer.poll(1.0)
         if msg is None:
             continue
         if msg.error():
-            print(f"Consumer error: {msg.error()}")
+            logger.error(f"Consumer error: {msg.error()}")
             continue
         msg_dict = json.loads(msg.value().decode('utf-8'))
         config.registered_devices.update(msg_dict)
         with open(config.DEVICES_FILE, 'w') as file:
             json.dump(config.registered_devices, file, indent=4)
         # update_devices_dict(msg_dict)
-        print("\nReceived response:")
+        logger.info("\nReceived response:")
         for device in msg_dict:
-            print(f"Device: {device}, IP: {msg_dict[device]['src_ip']}, Is IoT: {msg_dict[device]['is_iot']}")
-
-# def update_devices_dict(new_devices_results):
-#     config.registered_devices = new_devices_results
-#     for device in new_devices_results:
-#         if device in config.total_new_devices:
-#             del config.total_new_devices[device]
+            logger.info(f"Device: {device}, IP: {msg_dict[device]['src_ip']}, Is IoT: {msg_dict[device]['is_iot']}")

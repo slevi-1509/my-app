@@ -4,7 +4,7 @@ import os
 import time
 import json
 import redis
-import config
+import config as config
 from models.Interfaces import InterfaceClass
 from models.SubmitFromUser import SubmitFromUser
 from utils.utils import start_sniffer, get_devices_from_redis
@@ -21,7 +21,6 @@ def getInterfaces(request: Request):
 
 @router.get("/devices")
 def getDevices(request: Request):
-    # print(type(request.app.state.devices))
     # print("devices", config.registered_devices)
     return config.registered_devices
 
@@ -39,7 +38,7 @@ def getDevice(request: Request, mac: str):
 
 @router.get("/anomalies")
 def getAnomalies(request: Request, response_model=list[str]):
-    r = redis.Redis(host='localhost', port=config.REDIS_ANOMALIES_PORT, decode_responses=True)
+    r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_ANOMALIES_PORT, decode_responses=True)
     keys = r.scan_iter("*")  
     anomalies = []
     for key in keys:
@@ -51,7 +50,7 @@ def getAnomalies(request: Request, response_model=list[str]):
 
 @router.get("/log/{mac}")
 def getDeviceLog(request: Request, mac: str, response_model=list[str]):
-    r = redis.Redis(host='localhost', port=config.REDIS_PACKETS_PORT, decode_responses=True)
+    r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_PACKETS_PORT, decode_responses=True)
     # device_log = []
     # values = r.lrange(key, 0, -1)  # get all values in the list
     values = [json.loads(v) for v in r.lrange(mac, 0, -1)]  # convert JSON strings to Python objects
@@ -60,6 +59,7 @@ def getDeviceLog(request: Request, mac: str, response_model=list[str]):
 
 @router.post("/runsniffer")
 def startSniffer(params: SubmitFromUser, request: Request):
+    config.stop_sniff_flag = False
     found_working_interfaces = interfaces.get_working_ifaces()
     for interface_item in found_working_interfaces:
         if params.interface == interface_item.mac.upper():
@@ -68,6 +68,11 @@ def startSniffer(params: SubmitFromUser, request: Request):
     if not interface:
         return {"status": "error", "message": "Interface not found"}
     start_sniffer(interface, params)
+    
+@router.post("/stopsniffer")
+def stopSniffer(request: Request):
+    print("Stopping sniffer...")
+    config.stop_sniff_flag = True
     
 # @router.websocket("/ws/chat")
 # async def websocket_endpoint(websocket: WebSocket):

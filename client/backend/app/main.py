@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import threading
 from routes import routers
 from kafka_consumer.consumer import consume_messages
-import config
+import config as config
 
 app = FastAPI(title="Sniffer API", version="1.0.0", 
               description="API for Sniffer application")

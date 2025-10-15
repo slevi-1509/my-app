@@ -13,7 +13,7 @@ import nmap
 # import requests
 # import ast
 import time
-import config
+import config as config
 from models.PacketSummary import PackageSummary
 from models.NewDevice import NewDevice
 from utils.dhcp_fingerprint import handle_dhcp_packet
@@ -28,17 +28,29 @@ device_mac = ''
 
 def start_sniffer(interface, params):
     global router_mac
+    packets_to_process = []
     print(f"Starting sniffer on interface {interface.name} with IP {interface.ip}")
     # websocket.send_text(f"Starting sniffer on interface {interface.name} with IP {interface.ip}")
     network = ipaddress.ip_network(f"{interface.ip}/24", strict=False)
     router_mac = interface.mac.upper()
     filter = "tcp or udp or icmp"
     for i in count(0):
+        packets_to_process.clear()
         packets_to_send.clear()
         new_devices.clear()
         get_devices_from_redis(params.interface)
-        sniff(iface=interface, filter=filter, prn=lambda pkt: handle_packet(pkt, network, params.iot_probability),
+        # sniff(iface=interface, filter=filter, stop_filter=config.stop_sniff_flag, prn=lambda pkt: handle_packet(pkt, network, params.iot_probability),
+        sniff(iface=interface, filter=filter, stop_filter=config.stop_sniff_flag, prn=lambda pkt: packets_to_process.append(pkt),
                 count=int(params.no_of_packets), store=0)
+        index = 0
+        while not config.stop_sniff_flag and index < len(packets_to_process):
+            handle_packet(packets_to_process[index], network, params.iot_probability)
+            index += 1
+        print (f"Session: {i+1} - Sniffed {len(packets_to_process)} packets, {len(packets_to_send)} sent to AI")
+        if config.stop_sniff_flag:
+            print("Sniffer stopped by user")
+            config.stop_sniff_flag = False
+            return
         if packets_to_send:
             thread = threading.Thread(target=handle_sending_packets, args=(params.ports_scan, params.os_detect, params.collect_data_time))
             thread.start()
@@ -64,8 +76,8 @@ def handle_packet(packet, network, iot_probability):
         return
     if ipaddress.ip_address(packet[IP].src) not in network and ipaddress.ip_address(packet[IP].dst) not in network:
         return
-    if DHCP in packet and packet[DHCP].options:
-        dhcp_fingerprint = handle_dhcp_packet(packet)
+    # if DHCP in packet and packet[DHCP].options:
+    #     dhcp_fingerprint = handle_dhcp_packet(packet)
     packet_summary = PackageSummary(
         timestamp=datetime.fromtimestamp(packet.time).strftime('%Y-%m-%d %H:%M:%S'),
         direction="Tx" if ipaddress.ip_address(packet[IP].src) in network else "Rx",
@@ -100,17 +112,17 @@ def handle_packet(packet, network, iot_probability):
 
 def log_packet(packet_summary):
     try:
-        if device_mac not in packets_to_send.keys():
-            packets_to_send[device_mac] = [packet_summary.__dict__]
-        else:
+        if device_mac in packets_to_send.keys():
             tempSet = packets_to_send[device_mac]
             for existing_packet in tempSet:
                 if existing_packet['dst_mac'] == packet_summary.dst_mac:
                     if existing_packet['dst_ip'] == packet_summary.dst_ip:
                         if existing_packet['dst_port'] == packet_summary.dst_port:
                             return
-            print(f'{packet_summary.src_mac} : {packet_summary.dst_mac} : {packet_summary.direction} : {packet_summary.dst_ip} : {packet_summary.dst_port}')
             packets_to_send[device_mac].append(packet_summary.__dict__)
+        else:
+            packets_to_send[device_mac] = [packet_summary.__dict__]
+        print(f'{packet_summary.src_mac} : {packet_summary.dst_mac} : {packet_summary.direction} : {packet_summary.dst_ip} : {packet_summary.dst_port}')
     except Exception as e:
         print(f"Error logging packet: {e}")
 

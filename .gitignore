@@ -26,4 +26,3 @@ __pycache__
 *.sln
 *.sw?
 *.tar
-/backend/app/config.py

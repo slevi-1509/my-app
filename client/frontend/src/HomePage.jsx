@@ -137,6 +137,15 @@ const HomePage = () => {
     }
   }
 
+  const handleStop = async (e) => {
+    e.preventDefault();
+    try {
+      let response = await axios.post(`http://localhost:8000/stopsniffer`, parameters);
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
   const handle_device_click = async (device) => {
     let { src_mac } = device;
     setSelectedDevice(device);
@@ -204,7 +213,10 @@ const HomePage = () => {
                   />
                 </div>
             </div>
-            <button type="submit" value="Submit" onClick={handleSubmit}> Submit </button>
+            <section style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: '1rem', marginTop: '1rem' }}>
+              <button type="submit" value="Submit" onClick={handleSubmit}> Submit </button>
+              <button type="stop" onClick={handleStop}> Stop </button>
+            </section>
           </section>
         </div>
         {/* <div className='chat-box' style={{ marginLeft: '2rem', border: '1px solid yellow', padding: '1rem', width: '55%', height: '20rem', overflowY: 'scroll' }}>
