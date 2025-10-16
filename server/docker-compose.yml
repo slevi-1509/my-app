@@ -41,6 +41,7 @@ services:
     image: redis:latest
     container_name: redis-devices
     restart: always
+    command: redis-server --requirepass rW3QFwzpiMyYqCZg}
     ports:
       - "6379:6379"
     volumes:
@@ -50,6 +51,7 @@ services:
     image: redis:latest
     container_name: redis-anomalies
     restart: always
+    command: redis-server --requirepass rW3QFwzpiMyYqCZg}
     ports:
       - "6380:6379"
     volumes:
@@ -59,6 +61,7 @@ services:
     image: redis:latest
     container_name: redis-log
     restart: always
+    command: redis-server --requirepass rW3QFwzpiMyYqCZg}
     ports:
       - "6381:6379"
     volumes:
@@ -79,6 +82,7 @@ services:
     container_name: ai_agent
     environment:
       - KAFKA_BROKER_URL=kafka:29092
+      - REDIS_PASSWORD=rW3QFwzpiMyYqCZg}
     depends_on:
       - kafka
 
@@ -88,6 +92,7 @@ services:
     container_name: packets_server
     environment:
       - KAFKA_BROKER_URL=kafka:29092
+      - REDIS_PASSWORD=rW3QFwzpiMyYqCZg}
     depends_on:
       - kafka
 

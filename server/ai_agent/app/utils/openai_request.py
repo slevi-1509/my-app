@@ -2,12 +2,16 @@ from openai import OpenAI
 import logging
 from datetime import datetime
 import redis
+import config as config
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 def get_openai_response(api_key, new_devices: dict): #, data_queue: queue.Queue):
     devices_to_register = {}
+    client = OpenAI(
+            api_key=api_key,
+        )
     for key, value in new_devices.items():
         # Format device info into prompt
         prompt = f"""
@@ -32,11 +36,6 @@ def get_openai_response(api_key, new_devices: dict): #, data_queue: queue.Queue)
         return a percentage number as an integer of probability that it is an IoT device and a short explanation
         (up to 500 characters) of the reasoning behind the probability result (separated by ::).
         """
-        
-        client = OpenAI(
-            api_key=api_key,
-        )
-        
         try:
             response = client.chat.completions.create(
                 model="gpt-5",
@@ -72,7 +71,7 @@ def get_openai_response(api_key, new_devices: dict): #, data_queue: queue.Queue)
         connect_redis(devices_to_register)
 
 def connect_redis(devices_to_register):
-    r = redis.Redis(host='redis-devices', port=6379, decode_responses=True)
+    r = redis.Redis(host='redis-devices', port=6379, password=config.REDIS_PASSWORD, decode_responses=True)
     logger.info(f"{datetime.now().strftime('%H:%M:%S - %Y-%m-%d')} - Redis_Devices being updated...")
     for key, value in devices_to_register.items():
         r.hset(key, mapping=value)

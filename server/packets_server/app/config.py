@@ -1,2 +1,3 @@
 LOG_FILE = "server.log"
 KAFKA_BROKER_URL = 'kafka:29092'
+REDIS_PASSWORD = 'rW3QFwzpiMyYqCZg}'

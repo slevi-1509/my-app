@@ -3,6 +3,7 @@ registered_devices = {}
 total_new_devices = {}
 anomalies = []
 stop_sniff_flag = False
+REDIS_PASSWORD = "rW3QFwzpiMyYqCZg}"
 REDIS_DEVICES_PORT = 6379
 REDIS_ANOMALIES_PORT = 6380
 REDIS_PACKETS_PORT = 6381

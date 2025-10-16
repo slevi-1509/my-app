@@ -72,7 +72,7 @@ def consume_messages():
         connect_redis(msg_key, msg_value)
 
 def connect_redis(collect_data_time, packets):
-    r = redis.Redis(host='redis-log', port=6379, decode_responses=True)
+    r = redis.Redis(host='redis-log', port=6379, password=config.REDIS_PASSWORD, decode_responses=True)
     for key, value in packets.items():
         if not r.exists(key):
             r.rpush(key, *map(json.dumps, value))
@@ -98,5 +98,5 @@ def connect_redis(collect_data_time, packets):
                 
 def handle_anomaly(packet, mac):
     logger.warning(f"Anomaly detected: {packet}")
-    r = redis.Redis(host='redis-anomalies', port=6379, decode_responses=True)
+    r = redis.Redis(host='redis-anomalies', port=6379, password=config.REDIS_PASSWORD, decode_responses=True)
     r.rpush(mac, json.dumps(packet))

@@ -43,7 +43,7 @@ def getDevice(request: Request, mac: str):
 
 @router.get("/anomalies")
 def getAnomalies(request: Request, response_model=list[str]):
-    r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_ANOMALIES_PORT, decode_responses=True)
+    r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_ANOMALIES_PORT, password=config.REDIS_PASSWORD, decode_responses=True)
     keys = r.scan_iter("*")  
     anomalies = []
     for key in keys:
@@ -55,7 +55,7 @@ def getAnomalies(request: Request, response_model=list[str]):
 
 @router.get("/log/{mac}")
 def getDeviceLog(request: Request, mac: str, response_model=list[str]):
-    r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_PACKETS_PORT, decode_responses=True)
+    r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_PACKETS_PORT, password=config.REDIS_PASSWORD, decode_responses=True)
     # device_log = []
     # values = r.lrange(key, 0, -1)  # get all values in the list
     values = [json.loads(v) for v in r.lrange(mac, 0, -1)]  # convert JSON strings to Python objects

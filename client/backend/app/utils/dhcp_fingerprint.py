@@ -75,4 +75,3 @@ def handle_dhcp_packet(pkt):
     # if os.geteuid() != 0:
     #     sys.exit("Error: This script must be run as root (e.g., with sudo).")
     # main()
-

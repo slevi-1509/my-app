@@ -5,9 +5,9 @@ from datetime import datetime
 from itertools import count
 from scapy.all import sniff
 import redis
+import logging
 import threading
 import ipaddress
-# import json
 import socket
 import nmap
 # import requests
@@ -20,6 +20,9 @@ from utils.dhcp_fingerprint import handle_dhcp_packet
 from kafka_producer.producer import send_message
 from kafka_producer.produce_schema import ProduceMessage
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 new_devices = {}
 packets_to_send = {}
 new_devices_sent_to_ai = {}
@@ -29,7 +32,7 @@ device_mac = ''
 def start_sniffer(interface, params):
     global router_mac
     packets_to_process = []
-    print(f"Starting sniffer on interface {interface.name} with IP {interface.ip}")
+    logger.info(f"Starting sniffer on interface {interface.name} with IP {interface.ip}")
     # websocket.send_text(f"Starting sniffer on interface {interface.name} with IP {interface.ip}")
     network = ipaddress.ip_network(f"{interface.ip}/24", strict=False)
     router_mac = interface.mac.upper()
@@ -46,9 +49,9 @@ def start_sniffer(interface, params):
         while not config.stop_sniff_flag and index < len(packets_to_process):
             handle_packet(packets_to_process[index], network, params.iot_probability)
             index += 1
-        print (f"Session: {i+1} - Sniffed {len(packets_to_process)} packets, {len(packets_to_send)} sent to AI")
+        logger.info(f"Session: {i+1} - Sniffed {len(packets_to_process)} packets, {len(packets_to_send)} sent to AI")
         if config.stop_sniff_flag:
-            print("Sniffer stopped by user")
+            logger.error("Sniffer stopped by user")
             config.stop_sniff_flag = False
             return
         if packets_to_send:
@@ -59,12 +62,12 @@ def start_sniffer(interface, params):
                 thread.join()
         if i == int(params.no_of_sessions)-1:
             new_devices_sent_to_ai.clear()
-            print("Sniffer finished current running")
+            logger.info("Sniffer finished current running")
             break
         
 def get_devices_from_redis(router_mac=None):
     config.registered_devices.clear()
-    r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_DEVICES_PORT, decode_responses=True)
+    r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_DEVICES_PORT, password=config.REDIS_PASSWORD, decode_responses=True)
     for key in r.keys():
         if r.hget(key, 'router_mac') == router_mac:
             config.registered_devices[key] = r.hgetall(key)
@@ -96,11 +99,11 @@ def handle_packet(packet, network, iot_probability):
             packet_summary.dns_query = packet[DNSQR].qname.decode("utf-8") if packet.haslayer(DNSQR) else "None" #payload(DNS).qd.0.qname
             # packet_summary.dns_answer = packet[DNSRR].rdata.decode("utf-8") if 'rdata' in packet[DNSRR] else "None"
         except Exception as e:
-            print(f"Error decoding DNS data: {e}")
+            logger.error(f"Error decoding DNS data: {e}")
     if (device_mac in config.registered_devices):
         is_iot = int(config.registered_devices[device_mac].get("is_iot"))
         if is_iot <= iot_probability:
-            # print(f"Device {packet_summary.src_mac} is not an IoT device (IoT probability: {is_iot}%)")
+            # logger.info(f"Device {packet_summary.src_mac} is not an IoT device (IoT probability: {is_iot}%)")
             return
     else:
         if (device_mac not in new_devices.keys() and device_mac not in config.total_new_devices.keys()):
@@ -122,9 +125,9 @@ def log_packet(packet_summary):
             packets_to_send[device_mac].append(packet_summary.__dict__)
         else:
             packets_to_send[device_mac] = [packet_summary.__dict__]
-        print(f'{packet_summary.src_mac} : {packet_summary.dst_mac} : {packet_summary.direction} : {packet_summary.dst_ip} : {packet_summary.dst_port}')
+        logger.info(f'{packet_summary.src_mac} : {packet_summary.dst_mac} : {packet_summary.direction} : {packet_summary.dst_ip} : {packet_summary.dst_port}')
     except Exception as e:
-        print(f"Error logging packet: {e}")
+        logger.error(f"Error logging packet: {e}")
 
 def handle_sending_packets(ports_scan, os_detect, collect_data_time):
     global router_mac
@@ -153,7 +156,7 @@ def get_vendor_name(ip, mac):
             vendor_name = nm[ip]['vendor'][mac]
             return vendor_name
     except Exception as e:
-        print(f"Error occurred while scanning: {e}")
+        logger.error(f"Error occurred while scanning: {e}")
         return "Unknown Vendor"
 
 def get_hostname_from_ip(ip):
@@ -165,7 +168,7 @@ def get_hostname_from_ip(ip):
     
 def scan_port(host):
     open_ports = ''
-    print(f"Scanning ports on {host}...")
+    logger.info(f"Scanning ports on {host}...")
     try: 
         for port in config.PORTS_TO_SCAN:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -195,7 +198,7 @@ def scan_port(host):
         #     return open_ports.strip(', ')
         return open_ports.strip(', ')
     except socket.error as e:
-        print(f"Socket error: {e}")
+        logger.error(f"Socket error: {e}")
     
 def detect_os_fast(packet, tcp_window_size):
     if packet:
@@ -210,7 +213,7 @@ def detect_os_fast(packet, tcp_window_size):
         
 def detect_os_slow(ip):
     nm = nmap.PortScanner()
-    print(f"Detecting Operating System for {ip}...")
+    logger.info(f"Detecting Operating System for {ip}...")
     try:
         scan = nm.scan(hosts=ip, arguments='-O')
         if 'osmatch' in scan['scan'][ip]:
@@ -218,5 +221,5 @@ def detect_os_slow(ip):
         else:
             return "Unknown OS"
     except Exception as e:
-        print(f"Error occurred while scanning: {e}")
+        logger.error(f"Error occurred while scanning: {e}")
         return "Unknown OS"

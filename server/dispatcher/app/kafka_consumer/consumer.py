@@ -101,4 +101,3 @@ def handle_message(msg_key, msg_value):
         logger.info("No new devices found")
     send_message('dispatcher_to_packets_server', msg_value['packets'], str(msg_value['collect_data_time']))
     logger.info("Message sent to packets server")
-    
