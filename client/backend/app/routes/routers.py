@@ -29,7 +29,7 @@ def getDevices(request: Request):
     # print("devices", config.registered_devices)
     return config.registered_devices
 
-@router.get("/devices/{mac}")
+@router.get("/devices{mac}")
 def getDevice(request: Request, mac: str):
     return get_devices_from_redis(mac)
     # r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
@@ -53,7 +53,7 @@ def getAnomalies(request: Request, response_model=list[str]):
     # print(anomalies)
     return anomalies
 
-@router.get("/log/{mac}")
+@router.get("/log{mac}")
 def getDeviceLog(request: Request, mac: str, response_model=list[str]):
     r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_PACKETS_PORT, password=config.REDIS_PASSWORD, decode_responses=True)
     # device_log = []

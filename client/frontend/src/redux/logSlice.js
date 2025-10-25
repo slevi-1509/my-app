@@ -3,9 +3,8 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 export const fetchLog = createAsyncThunk(
   'log/fetchLog',
   async (selectedDevice) => {
-    // debugger;
     const SERVER_URL = 'http://localhost:8000';
-    const res = await fetch(`${SERVER_URL}/log/${selectedDevice}`);
+    const res = await fetch(`${SERVER_URL}/log${selectedDevice}`);
     const data = await res.json();
     return data; // this is an array
   }

@@ -7,7 +7,7 @@ export const fetchDevices = createAsyncThunk(
   async (router_mac) => {
     // const state = getState();
     const SERVER_URL = `http://localhost:8000`;
-    const res = await fetch(`${SERVER_URL}/devices/${router_mac}`);
+    const res = await fetch(`${SERVER_URL}/devices${router_mac}`);
     const data = await res.json();
     return data; // this is an array
   }

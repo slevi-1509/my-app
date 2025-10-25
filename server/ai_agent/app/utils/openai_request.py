@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 import redis
 import config as config
-
+from kafka_producer.producer import send_message
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,8 @@ def get_openai_response(api_key, new_devices: dict): #, data_queue: queue.Queue)
         r.hset(key, mapping=device_to_register)
     # if len(devices_to_register) > 0:
     #     connect_redis(devices_to_register)
-
+    send_message()
+    
 def connect_redis(devices_to_register):
     r = redis.Redis(host='redis-devices', port=6379, password=config.REDIS_PASSWORD, decode_responses=True)
     logger.info(f"{datetime.now().strftime('%H:%M:%S - %Y-%m-%d')} - Redis_Devices being updated...")

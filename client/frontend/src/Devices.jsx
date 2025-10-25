@@ -10,7 +10,7 @@ import './App.css'
 
 const Devices = () => {
     const { devices } = useSelector((state) => state.devices);
-    const [deviceToShow, setDeviceToShow] = useState({});
+    const [selectedDevice, setSelectedDevice] = useState({});
     const dispatch = useDispatch();
     const router_mac = useParams().router_mac;
 
@@ -28,12 +28,8 @@ const Devices = () => {
 
     const handleSelect = async (e) => {
         let { value } = e.target;
-        // debugger;
-        if (value === "Show All Anomalies") {
-            setDeviceToShow({});
-        } else {
-            setDeviceToShow(Object.values(devices).find(device => device.src_mac === value) || {});
-        }
+        setSelectedDevice(value in devices ? devices[value] : {});
+       
     }
 
     return (
@@ -59,24 +55,24 @@ const Devices = () => {
                 </section> 
             }  
             <br/>
-            {deviceToShow && Object.keys(deviceToShow).length > 0 &&
+            {Object.keys(selectedDevice).length > 0 && 
                 <div className="device-info">
                     <h3>Device Information</h3>
-                    <p><strong>IP:</strong> {deviceToShow.src_ip}</p>
-                    <p><strong>MAC:</strong> {deviceToShow.src_mac}</p> 
-                    <p><strong>IoT Probability:</strong> {deviceToShow.is_iot}%</p>
-                    <p><strong>Host Name:</strong> {deviceToShow.host_name}</p>
-                    <p><strong>Device OS:</strong> {deviceToShow.os}</p>
-                    <p><strong>Ports Scan Result:</strong> {deviceToShow.port_scan_result}</p>
-                    <p><strong>TTL:</strong> {deviceToShow.ttl}</p>
-                    <p><strong>TCP Window Size:</strong> {deviceToShow.tcp_window_size}</p>
-                    <p><strong>IoT AI Reasoning:</strong> {deviceToShow.iot_reasoning}</p>
+                    <p><strong>IP:</strong> {selectedDevice.src_ip}</p>
+                    <p><strong>MAC:</strong> {selectedDevice.src_mac}</p> 
+                    <p><strong>IoT Probability:</strong> {selectedDevice.is_iot}%</p>
+                    <p><strong>Host Name:</strong> {selectedDevice.host_name}</p>
+                    <p><strong>Device OS:</strong> {selectedDevice.os}</p>
+                    <p><strong>Ports Scan Result:</strong> {selectedDevice.port_scan_result}</p>
+                    <p><strong>TTL:</strong> {selectedDevice.ttl}</p>
+                    <p><strong>TCP Window Size:</strong> {selectedDevice.tcp_window_size}</p>
+                    <p><strong>IoT AI Reasoning:</strong> {selectedDevice.iot_reasoning}</p>
                 </div>
             }
             <br/>
-            <Anomalies selectedDevice={deviceToShow} />
+            <Anomalies selectedDevice={selectedDevice.src_mac} />
             <br/> 
-            <Log selectedDevice={deviceToShow} />
+            <Log selectedDevice={selectedDevice.src_mac} />
         </div>
     );
 };

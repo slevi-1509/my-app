@@ -1,7 +1,5 @@
-// src/features/interfaces/interfacesSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-// Async thunk that fetches an array
 export const fetchAnomalies = createAsyncThunk(
   'anomalies/fetchAnomalies',
   async () => {

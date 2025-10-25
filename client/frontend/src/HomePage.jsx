@@ -16,7 +16,7 @@ let iotProbability = 0;
 
 const HomePage = () => {
   const { interfaces } = useSelector((state) => state.interfaces);
-  const { devices, select } = useSelector((state) => state.devices);
+  const { devices, selectedDevice } = useSelector((state) => state.devices);
   const [parameters, setParameters] = useState({});
   // const [iotProbability, setIotProbability] = useState();
   // const [selectedDevice, setSelectedDevice] = useState({});
@@ -29,12 +29,15 @@ const HomePage = () => {
     const fetchData = () => {
       // dispatch(setRouterMac(parameters.interface));
       // setIotProbability(parameters.iot_probability);
+      // debugger;
       getDevices();
-      getAnomalies();
+      setParameters(getInitialValues(interfaces));
     };
-    setParameters(getInitialValues(interfaces));
     fetchData();
-    const intervalId = setInterval(fetchData, 10000); // Poll every 10 seconds
+  }, []);
+
+  useEffect(() => {
+    const intervalId = setInterval(getDevices, 20000); // Poll every 10 seconds
     return () => clearInterval(intervalId);
   }, []);
 
@@ -61,11 +64,12 @@ const HomePage = () => {
 
   const getDevices = () => {
     dispatch(fetchDevices(router_mac));
-  }
-
-  const getAnomalies = () => {
     dispatch(fetchAnomalies());
   }
+
+  // const getAnomalies = () => {
+    
+  // }
 
   const handleSelect = (e) => {
     let { value, name } = e.target;
@@ -127,87 +131,87 @@ const HomePage = () => {
   };
 
   return (
-    <>
-      <Stack spacing={1} direction="row">
-          <Link to={`devices/${parameters.interface}`} >
-              More data...
-          </Link>
-          <button type="button" onClick={handleDeleteDb}> Delete DB </button>
-      </Stack>
-      <h1>IoT Anomalies Detector</h1>
-      {/* <br/>
-      <button type="button" onClick={()=>{setRemoteIpChange(!remoteIpChange)}}>Set Remote IP</button>
-      <input type="text" id="remoteIp" name="remoteIp" value={remoteIp} onChange={(e) => setRemoteIp(e.target.value)} />
-      <br/> */}
-      <br/>
-      <div className='settings-container' style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
-        <div>
-          { interfaces.length > 0 &&
+    <div style={{ display: 'flex', gap: '2rem', flexDirection: 'row', alignItems: 'flex-start' }}>
+      <div>
+        <Stack spacing={1} direction="row">
+            <Link to={`devices/${parameters.interface}`} >
+                More data...
+            </Link>
+            <button type="button" style={{ fontSize: '0.5rem', marginLeft: '4rem'}} onClick={handleDeleteDb}> Delete DB </button>
+        </Stack>
+        <h3>IoT Anomalies Detector</h3>
+        {/* <br/>
+        <button type="button" onClick={()=>{setRemoteIpChange(!remoteIpChange)}}>Set Remote IP</button>
+        <input type="text" id="remoteIp" name="remoteIp" value={remoteIp} onChange={(e) => setRemoteIp(e.target.value)} />
+        <br/> */}
+        <br/>
+        <div className='settings-container' style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
+          <div>
+            { interfaces.length > 0 &&
+              <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <h3>Interface List</h3>
+                <label htmlFor="interface">Select an interface:</label>
+                <select name="interface" id="interface" value={parameters.interface} onChange={handleSelect}>
+                  {interfaces.map((item, index) => (
+                    <option key={index} value={`${item['mac']}`}>{`${item['interface']} - ${item['ip']}`}</option>
+                  ))}
+                </select>
+              </section>
+            }
+            <br/>
             <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <h3>Interface List</h3>
-              <label htmlFor="interface">Select an interface:</label>
-              <select name="interface" id="interface" value={parameters.interface} onChange={handleSelect}>
-                {interfaces.map((item, index) => (
-                  <option key={index} value={`${item['mac']}`}>{`${item['interface']} - ${item['ip']}`}</option>
-                ))}
-              </select>
+              <h3>Options:</h3>
+              <label htmlFor="interval">Set interval (seconds): </label>
+              <input type="number" id="interval" name="interval" defaultValue={parameters.interval} min="0" onChange={handleSelect} />
+              <label htmlFor="no_of_packets">Set number of packets: </label>
+              <input type="number" id="no_of_packets" name="no_of_packets" defaultValue={parameters.no_of_packets} min="1" onChange={handleSelect} />
+              <label htmlFor="no_of_sessions">Set number of sessions (0 for infinite): </label>
+              <input type="number" id="no_of_sessions" name="no_of_sessions" defaultValue={parameters.no_of_sessions} min="1" onChange={handleSelect} />
+              <label htmlFor="collect_data_time">Set devices collection data time (seconds): </label>
+              <input type="number" id="collect_data_time" name="collect_data_time" defaultValue={parameters.collect_data_time} min="600" onChange={handleSelect} />
+              <label><input type="checkbox" name="ports_scan" checked={parameters.ports_scan} onChange={handleSelect} /> Ports Scanning</label>
+              <label><input type="checkbox" name="os_detect" checked={parameters.os_detect} onChange={handleSelect} /> Deep OS detection (slower)</label>
+              <div className="slidecontainer" style={{width: "12rem"}}>
+                  <label htmlFor="iot_probability" style={{fontSize: '0.9rem'}}>Minimum IoT Probability: <strong>{parameters.iot_probability}</strong></label>
+                  <div id="iot_probability">
+                    <Slider 
+                        name="iot_probability"
+                        min={0}
+                        max={100}
+                        step={1}
+                        aria-label="IoT Probability"
+                        value={iotProbability}
+                        valueLabelDisplay="auto"
+                        onChange={handleSelect} 
+                    />
+                  </div>
+              </div>
+              <section style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: '1rem', marginTop: '1rem' }}>
+                <button type="submit" value="Submit" onClick={handleSubmit}> Submit </button>
+                <button type="stop" onClick={handleStop}> Stop </button>
+              </section>
             </section>
-          }
-          <br/>
-          <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <h3>Options:</h3>
-            <label htmlFor="interval">Set interval (seconds): </label>
-            <input type="number" id="interval" name="interval" defaultValue={parameters.interval} min="0" onChange={handleSelect} />
-            <label htmlFor="no_of_packets">Set number of packets: </label>
-            <input type="number" id="no_of_packets" name="no_of_packets" defaultValue={parameters.no_of_packets} min="1" onChange={handleSelect} />
-            <label htmlFor="no_of_sessions">Set number of sessions (0 for infinite): </label>
-            <input type="number" id="no_of_sessions" name="no_of_sessions" defaultValue={parameters.no_of_sessions} min="1" onChange={handleSelect} />
-            <label htmlFor="collect_data_time">Set collection data time for anomalies (seconds): </label>
-            <input type="number" id="collect_data_time" name="collect_data_time" defaultValue={parameters.collect_data_time} min="600" onChange={handleSelect} />
-            <label><input type="checkbox" name="ports_scan" checked={parameters.ports_scan} onChange={handleSelect} /> Ports Scanning</label>
-            <label><input type="checkbox" name="os_detect" checked={parameters.os_detect} onChange={handleSelect} /> Deep OS detection (slower)</label>
-            <div className="slidecontainer" style={{width: "12rem"}}>
-                <label htmlFor="iot_probability" style={{fontSize: '0.9rem'}}>Minimum IoT Probability: <strong>{parameters.iot_probability}</strong></label>
-                <div id="iot_probability">
-                  <Slider 
-                      name="iot_probability"
-                      min={0}
-                      max={100}
-                      step={1}
-                      aria-label="IoT Probability"
-                      value={iotProbability}
-                      valueLabelDisplay="auto"
-                      onChange={handleSelect} 
-                  />
-                </div>
-            </div>
-            <section style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: '1rem', marginTop: '1rem' }}>
-              <button type="submit" value="Submit" onClick={handleSubmit}> Submit </button>
-              <button type="stop" onClick={handleStop}> Stop </button>
-            </section>
-          </section>
+          </div>
+          {/* <div className='chat-box' style={{ marginLeft: '2rem', border: '1px solid yellow', padding: '1rem', width: '55%', height: '20rem', overflowY: 'scroll' }}>
+            <h4>WebSocket Chat</h4>
+            {messages.map((msg, index) => (
+              <p key={index}>{msg}</p>
+            ))}
+          </div> */}
         </div>
-        {/* <div className='chat-box' style={{ marginLeft: '2rem', border: '1px solid yellow', padding: '1rem', width: '55%', height: '20rem', overflowY: 'scroll' }}>
-          <h4>WebSocket Chat</h4>
-          {messages.map((msg, index) => (
-            <p key={index}>{msg}</p>
-          ))}
-        </div> */}
       </div>
-      <br/>
-      <div
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-        <h3>Devices <span style={{ fontSize: '1.2rem', color: 'gray' }}>(on router: {parameters.interface})</span> </h3>
+      <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#383333', height: '50rem' }}>
+        <h4>Devices <span style={{ fontSize: '1.2rem', color: 'gray' }}>(on router: {parameters.interface})</span> </h4>
         {Object.keys(devices).length > 0 ? (
           <DevicesComp iot={parameters.iot_probability} />
         ) : (
           <p>No devices found.</p>
         )}
         <br/>
-        <Anomalies/>
+        <Anomalies selectedDevice={selectedDevice} />
         <br/> 
       </div>
-    </>
+    </div>
   )
 }
 

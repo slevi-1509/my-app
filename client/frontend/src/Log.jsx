@@ -10,22 +10,16 @@ const Log = ({ selectedDevice }) => {
     useEffect (() => {
         const getInfo = async () => {
             // debugger;
-            if (selectedDevice != null) {
-                getLog();
-            }
+            dispatch(fetchLog( selectedDevice ? selectedDevice : []));
         }
         getInfo();
     }, [selectedDevice]);
-
-    const getLog = () => {
-        dispatch(fetchLog( selectedDevice.src_mac ));
-    }
 
     return (
         <div>
             <h3>Log (Packets Summary):</h3>   
             { log.length > 0 ? (
-                <table style={{fontSize: '0.7rem', display: 'block', width: 'fit-content', height: '20rem', overflowY: 'auto', borderCollapse: 'collapse'}}>
+                <table style={{fontSize: '0.7rem', display: 'block', width: 'fit-content', maxHeight: '20rem', overflowY: 'auto', borderCollapse: 'collapse'}}>
                     <thead>
                         <tr style={{position: 'sticky', top: 0, backgroundColor: '#8b7070ff'}}>
                             <th>Time</th>

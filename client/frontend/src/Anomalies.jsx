@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux';
 import './App.css'
 
-const Anomalies = () => {
-    const { selectedDevice } = useSelector((state) => state.devices);
+const Anomalies = ({ selectedDevice }) => {
+    // const { selectedDevice } = useSelector((state) => state.devices);
     const { anomalies } = useSelector((state) => state.anomalies);
     const { router_mac } = useSelector((state) => state.devices);
     const [anomaliesToShow, setAnomaliesToShow] = useState(anomalies);
@@ -12,11 +12,11 @@ const Anomalies = () => {
     useEffect (() => {
         const getInfo = async () => {
             // debugger;
-            if (selectedDevice == '') {
+            if (!selectedDevice) {
                 setAnomaliesToShow(anomalies);
                 setAnomaliesTitle('for all devices');
             } else {
-                setAnomaliesToShow(anomalies.filter(anomaly => anomaly.src_mac === selectedDevice));
+                setAnomaliesToShow(anomalies.filter(anomaly => anomaly.src_mac === selectedDevice || anomaly.dst_mac === selectedDevice));
                 setAnomaliesTitle(`for device: ${selectedDevice}`);
             }
         }
@@ -27,7 +27,7 @@ const Anomalies = () => {
         <div>
             <h3>Anomalies <span style={{ fontSize: '1.2rem', color: 'gray' }}>({anomalies_title})</span></h3>
             { anomaliesToShow.length > 0 ? (
-                <table style={{fontSize: '0.7rem', display: 'block', width: 'fit-content', height: '20rem', overflowY: 'auto', borderCollapse: 'collapse'}}>
+                <table style={{fontSize: '0.7rem', display: 'block', width: 'fit-content', maxHeight: '20rem', overflowY: 'auto', borderCollapse: 'collapse'}}>
                     <thead>
                         <tr style={{position: 'sticky', top: 0, backgroundColor: '#8b7070ff'}}>
                             <th>Time</th>
