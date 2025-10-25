@@ -1,24 +1,23 @@
 import { useEffect, useState } from 'react'
-import { useSelector, useDispatch } from 'react-redux';
-import { Link, useParams } from "react-router-dom"
-import { Stack } from "@mui/material"
-import { fetchAnomalies } from './redux/anomaliesSlice';
+import { useSelector } from 'react-redux';
 import './App.css'
 
-const Anomalies = ({ selectedDevice }) => {
+const Anomalies = () => {
+    const { selectedDevice } = useSelector((state) => state.devices);
     const { anomalies } = useSelector((state) => state.anomalies);
     const { router_mac } = useSelector((state) => state.devices);
     const [anomaliesToShow, setAnomaliesToShow] = useState(anomalies);
-    const SERVER_URL = `http://localhost:8000`
-    const dispatch = useDispatch();
-    
+    const [anomalies_title, setAnomaliesTitle] = useState('');
+
     useEffect (() => {
         const getInfo = async () => {
             // debugger;
-            if (selectedDevice == {} || Object.keys(selectedDevice).length === 0) {
+            if (selectedDevice == '') {
                 setAnomaliesToShow(anomalies);
+                setAnomaliesTitle('for all devices');
             } else {
-                setAnomaliesToShow(anomalies.filter(anomaly => anomaly.src_mac === selectedDevice.src_mac));
+                setAnomaliesToShow(anomalies.filter(anomaly => anomaly.src_mac === selectedDevice));
+                setAnomaliesTitle(`for device: ${selectedDevice}`);
             }
         }
         getInfo();
@@ -26,11 +25,11 @@ const Anomalies = ({ selectedDevice }) => {
 
     return (
         <div>
-            <h3>Anomalies:</h3>   
+            <h3>Anomalies <span style={{ fontSize: '1.2rem', color: 'gray' }}>({anomalies_title})</span></h3>
             { anomaliesToShow.length > 0 ? (
-                <table style={{fontSize: '0.7rem', width: '95%', borderCollapse: 'collapse'}}>
+                <table style={{fontSize: '0.7rem', display: 'block', width: 'fit-content', height: '20rem', overflowY: 'auto', borderCollapse: 'collapse'}}>
                     <thead>
-                        <tr>
+                        <tr style={{position: 'sticky', top: 0, backgroundColor: '#8b7070ff'}}>
                             <th>Time</th>
                             <th>src-mac</th>
                             <th>src-ip</th>

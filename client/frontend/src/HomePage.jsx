@@ -5,7 +5,7 @@ import io from 'socket.io-client';
 import { Stack, Button } from "@mui/material"
 import Slider from '@mui/material/Slider'
 import axios from 'axios'
-import { fetchDevices, setRouterMac } from './redux/devicesSlice';
+import { fetchDevices, setSelectedDevice } from './redux/devicesSlice';
 import { fetchAnomalies } from './redux/anomaliesSlice';
 import Anomalies from './Anomalies';
 import DevicesComp from './DevicesComp';
@@ -14,86 +14,50 @@ import './App.css'
 let router_mac = ''
 let iotProbability = 0;
 
-export const getInitialValues = (interfaces) => {
-  let parameters_initial = {};
-  if (localStorage.getItem('parameters')) {
-    parameters_initial = JSON.parse(localStorage.getItem('parameters'));
-  } else {
-    parameters_initial = {'interface': interfaces[0].mac,
-      'interval': 1,
-      'no_of_packets': 100,
-      'no_of_sessions': 1,
-      'collect_data_time': 3600,
-      'ports_scan': false,
-      'os_detect': false,
-      'iot_probability': 0,
-    };
-    localStorage.setItem('parameters', JSON.stringify(parameters_initial));
-  }
-  iotProbability = parameters_initial.iot_probability;
-  router_mac = parameters_initial.interface;
-  return parameters_initial;
-}
-
 const HomePage = () => {
   const { interfaces } = useSelector((state) => state.interfaces);
-  const { devices } = useSelector((state) => state.devices);
+  const { devices, select } = useSelector((state) => state.devices);
   const [parameters, setParameters] = useState({});
   // const [iotProbability, setIotProbability] = useState();
-  const [selectedDevice, setSelectedDevice] = useState({});
+  // const [selectedDevice, setSelectedDevice] = useState({});
   const [messages, setMessages] = useState([]);
   const [socket, setSocket] = useState(null);
   const [inputMessage, setInputMessage] = useState('');
   const dispatch = useDispatch();
-  
-  // useEffect(() => {
-  //       const ws = new WebSocket("ws://localhost:8000/ws/chat"); // Connect to your FastAPI WebSocket endpoint
-  //       ws.onopen = () => {
-  //         console.log("WebSocket connection established");
-  //       };
-  //       ws.onmessage = (event) => {
-  //         setMessages((prevMessages) => [...prevMessages, event.data]);
-  //       };
-  //       ws.onclose = () => {
-  //         console.log("WebSocket connection closed");
-  //       };
-  //       ws.onerror = (error) => {
-  //         console.error("WebSocket error: ", error);
-  //       };
-  //       setSocket(ws);
-  //       return () => {
-  //         ws.close(); // Clean up on component unmount
-  //       };
-  //     }, []);
-  
-  // useEffect (() => {
-  //   let remote_ip = '';
-  //   if (remoteIp === '') {
-  //     if (localStorage.getItem('remoteIp')) {
-  //       remote_ip = localStorage.getItem('remoteIp');
-  //       setRemoteIp(remote_ip);
-  //     } else {
-  //       remote_ip = 'localhost';
-  //       setRemoteIp('localhost');
-  //       localStorage.setItem('remoteIp', 'localhost');
-  //     }
-  //   } else {
-  //     remote_ip = remoteIp;
-  //     localStorage.setItem('remoteIp', remoteIp);
-  //   }
-  //   if (status === 'idle') {
-  //     getInterfaces();
-  //     // dispatch(fetchInterfaces()); // trigger the fetch once
-  //   }
-  // }, [status, dispatch]);
 
   useEffect(() => {
-    // dispatch(setRouterMac(parameters.interface));
+    const fetchData = () => {
+      // dispatch(setRouterMac(parameters.interface));
+      // setIotProbability(parameters.iot_probability);
+      getDevices();
+      getAnomalies();
+    };
     setParameters(getInitialValues(interfaces));
-    // setIotProbability(parameters.iot_probability);
-    getDevices();
-    getAnomalies();
+    fetchData();
+    const intervalId = setInterval(fetchData, 10000); // Poll every 10 seconds
+    return () => clearInterval(intervalId);
   }, []);
+
+  const getInitialValues = (interfaces) => {
+    let parameters_initial = {};
+    if (localStorage.getItem('parameters')) {
+      parameters_initial = JSON.parse(localStorage.getItem('parameters'));
+    } else {
+      parameters_initial = {'interface': interfaces[0].mac,
+        'interval': 1,
+        'no_of_packets': 100,
+        'no_of_sessions': 1,
+        'collect_data_time': 3600,
+        'ports_scan': false,
+        'os_detect': false,
+        'iot_probability': 0,
+      };
+      localStorage.setItem('parameters', JSON.stringify(parameters_initial));
+    }
+    iotProbability = parameters_initial.iot_probability;
+    router_mac = parameters_initial.interface;
+    return parameters_initial;
+  }
 
   const getDevices = () => {
     dispatch(fetchDevices(router_mac));
@@ -124,6 +88,7 @@ const HomePage = () => {
     }
     setParameters({...parameters, [name]: value})
     localStorage.setItem('parameters', JSON.stringify({...parameters, [name]: value}));
+    dispatch(setSelectedDevice(""));
   }
 
   const handleSubmit = async (e) => {
@@ -146,10 +111,13 @@ const HomePage = () => {
     }
   }
 
-  const handle_device_click = async (device) => {
-    let { src_mac } = device;
-    setSelectedDevice(device);
-    // setAnomaliesToShow(anomalies.filter(anomaly => anomaly.src_mac === src_mac));
+  const handleDeleteDb = async (e) => {
+    e.preventDefault();
+    try {
+      let response = await axios.get(`http://localhost:8000/deletedb`);
+    } catch (error) {
+      console.log(error.message);
+    }
   }
 
   const sendMessage = (msg) => {
@@ -164,8 +132,9 @@ const HomePage = () => {
           <Link to={`devices/${parameters.interface}`} >
               More data...
           </Link>
+          <button type="button" onClick={handleDeleteDb}> Delete DB </button>
       </Stack>
-      <h1>My Python Sniffer Client</h1>
+      <h1>IoT Anomalies Detector</h1>
       {/* <br/>
       <button type="button" onClick={()=>{setRemoteIpChange(!remoteIpChange)}}>Set Remote IP</button>
       <input type="text" id="remoteIp" name="remoteIp" value={remoteIp} onChange={(e) => setRemoteIp(e.target.value)} />
@@ -187,7 +156,6 @@ const HomePage = () => {
           <br/>
           <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
             <h3>Options:</h3>
-            <p>port scan {String(parameters.ports_scan)}</p>
             <label htmlFor="interval">Set interval (seconds): </label>
             <input type="number" id="interval" name="interval" defaultValue={parameters.interval} min="0" onChange={handleSelect} />
             <label htmlFor="no_of_packets">Set number of packets: </label>
@@ -229,14 +197,14 @@ const HomePage = () => {
       <br/>
       <div
         style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-        <h3>Devices:</h3>
+        <h3>Devices <span style={{ fontSize: '1.2rem', color: 'gray' }}>(on router: {parameters.interface})</span> </h3>
         {Object.keys(devices).length > 0 ? (
           <DevicesComp iot={parameters.iot_probability} />
         ) : (
           <p>No devices found.</p>
         )}
         <br/>
-        <Anomalies selectedDevice={selectedDevice} />
+        <Anomalies/>
         <br/> 
       </div>
     </>

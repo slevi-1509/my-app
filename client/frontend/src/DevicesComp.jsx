@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux';
+import { setSelectedDevice } from './redux/devicesSlice';
 import './App.css'
 
 const DevicesComp = ({ iot }) => {
@@ -8,12 +9,17 @@ const DevicesComp = ({ iot }) => {
     const dispatch = useDispatch();
     
     useEffect (() => {
-        const getInfo = async () => {
+        const getInfo = () => {
             // debugger;
             setDevicesToShow(Object.values(devices).filter(device => Number(device.is_iot) >= iot));
         }
         getInfo();
     }, [devices, iot]);
+
+    const handle_device_click = (device) => {
+        // let { src_mac } = device;
+        dispatch(setSelectedDevice(device.src_mac));
+    }
 
     return (
         <div
@@ -32,8 +38,8 @@ const DevicesComp = ({ iot }) => {
                     </thead>
                     <tbody>
                     {devicesToShow.map((device, index) => (
-                        <tr key={index} onClick={() => handle_device_click(device)}>
-                            <td style={{cursor: 'pointer'}}>{device.src_mac}</td>
+                        <tr style={{cursor: 'pointer'}}key={index} onClick={() => handle_device_click(device)}>
+                            <td>{device.src_mac}</td>
                             <td>{device.src_ip}</td>
                             <td>{device.os}</td>
                             <td>{device.vendor}</td>

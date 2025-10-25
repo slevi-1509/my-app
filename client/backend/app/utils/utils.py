@@ -49,9 +49,9 @@ def start_sniffer(interface, params):
         while not config.stop_sniff_flag and index < len(packets_to_process):
             handle_packet(packets_to_process[index], network, params.iot_probability)
             index += 1
-        logger.info(f"Session: {i+1} - Sniffed {len(packets_to_process)} packets, {len(packets_to_send)} sent to AI")
+        logger.info(f"Session: {i+1} - Sniffed {len(packets_to_process)} packets")
         if config.stop_sniff_flag:
-            logger.error("Sniffer stopped by user")
+            logger.info("Sniffer stopped by user")
             config.stop_sniff_flag = False
             return
         if packets_to_send:
@@ -130,6 +130,7 @@ def log_packet(packet_summary):
         logger.error(f"Error logging packet: {e}")
 
 def handle_sending_packets(ports_scan, os_detect, collect_data_time):
+    logger.info("Collecting data on new devices")
     global router_mac
     for key, value in new_devices.items():
         host_name = get_hostname_from_ip(value.src_ip)
@@ -143,6 +144,7 @@ def handle_sending_packets(ports_scan, os_detect, collect_data_time):
             'os': device_os,
         }
     msg = ProduceMessage(router_mac=router_mac, collect_data_time=collect_data_time, new_devices=new_devices, packets=packets_to_send)
+    logger.info(f"Sending {len(new_devices)} new devices to AI Agent")
     send_message(msg)
     new_devices_sent_to_ai.update(new_devices)
       

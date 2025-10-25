@@ -6,7 +6,6 @@ import Anomalies from './Anomalies';
 import Log from './Log';
 import { fetchDevices, setRouterMac } from './redux/devicesSlice';
 import { fetchAnomalies } from './redux/anomaliesSlice';
-import { getInitialValues } from './HomePage';
 import './App.css'
 
 const Devices = () => {

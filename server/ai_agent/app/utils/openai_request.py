@@ -8,7 +8,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 def get_openai_response(api_key, new_devices: dict): #, data_queue: queue.Queue):
-    devices_to_register = {}
+    r = redis.Redis(host='redis-devices', port=6379, password=config.REDIS_PASSWORD, decode_responses=True)
+    # devices_to_register = {}
     client = OpenAI(
             api_key=api_key,
         )
@@ -53,7 +54,7 @@ def get_openai_response(api_key, new_devices: dict): #, data_queue: queue.Queue)
             is_iot = 0
 
         iot_reasoning = (response.choices[0].message.content.split('::')[1].strip())
-        devices_to_register[value['src_mac']] = {
+        device_to_register = {
             "timestamp": value['timestamp'],
             "src_ip": value['src_ip'],
             "src_mac": value['src_mac'],
@@ -67,8 +68,9 @@ def get_openai_response(api_key, new_devices: dict): #, data_queue: queue.Queue)
             "iot_reasoning": iot_reasoning,
             "router_mac": value['router_mac']
         }
-    if len(devices_to_register) > 0:
-        connect_redis(devices_to_register)
+        r.hset(key, mapping=device_to_register)
+    # if len(devices_to_register) > 0:
+    #     connect_redis(devices_to_register)
 
 def connect_redis(devices_to_register):
     r = redis.Redis(host='redis-devices', port=6379, password=config.REDIS_PASSWORD, decode_responses=True)

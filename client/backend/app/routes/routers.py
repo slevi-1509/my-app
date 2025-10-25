@@ -62,6 +62,19 @@ def getDeviceLog(request: Request, mac: str, response_model=list[str]):
     # device_log.extend(values)
     return values
 
+@router.get("/deletedb")
+def deleteDB(request: Request):
+    r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_DEVICES_PORT, password=config.REDIS_PASSWORD, decode_responses=True)
+    for key in r.scan_iter("*"):
+        r.delete(key)
+    r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_PACKETS_PORT, password=config.REDIS_PASSWORD, decode_responses=True)
+    for key in r.scan_iter("*"):
+        r.delete(key)
+    r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_ANOMALIES_PORT, password=config.REDIS_PASSWORD, decode_responses=True)
+    for key in r.scan_iter("*"):
+        r.delete(key)
+    return {"status": "success", "message": "Database deleted"}
+
 @router.post("/runsniffer")
 def startSniffer(params: SubmitFromUser, request: Request):
     config.stop_sniff_flag = False
