@@ -1,14 +1,11 @@
-// src/features/interfaces/interfacesSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-// Async thunk that fetches an array
 export const fetchDevices = createAsyncThunk(
   'devices/fetchDevices',
   async (router_mac) => {
-    // const state = getState();
     const SERVER_URL = `http://localhost:8000`;
     const res = await fetch(`${SERVER_URL}/devices${router_mac}`);
-    const data = await res.json();
+    const data = res.json();
     return data; // this is an array
   }
 );

@@ -3,6 +3,7 @@ services:
     image: confluentinc/cp-kafka:latest
     hostname: kafka
     container_name: kafka
+    restart: always
     ports:
       - "9092:9092"
       - "9093:9093"
@@ -11,7 +12,7 @@ services:
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
       KAFKA_LISTENERS: "INTERNAL://kafka:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://kafka:9093"
-      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka:29092,EXTERNAL://54.92.162.91:9092"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka:29092,EXTERNAL://54.226.65.148:9092"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
       KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
       KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
@@ -71,6 +72,7 @@ services:
     build: ./dispatcher
     image: myapp/dispatcher:1.0.0
     container_name: dispatcher
+    restart: always
     environment:
       - KAFKA_BROKER_URL=kafka:29092
     depends_on:
@@ -80,6 +82,7 @@ services:
     build: ./ai_agent
     image: myapp/ai_agent:1.0.0
     container_name: ai_agent
+    restart: always
     environment:
       - KAFKA_BROKER_URL=kafka:29092
       - REDIS_PASSWORD=rW3QFwzpiMyYqCZg}
@@ -90,6 +93,7 @@ services:
     build: ./packets_server
     image: myapp/packets_server:1.0.0
     container_name: packets_server
+    restart: always
     environment:
       - KAFKA_BROKER_URL=kafka:29092
       - REDIS_PASSWORD=rW3QFwzpiMyYqCZg}

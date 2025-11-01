@@ -1,26 +1,34 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchLog } from './redux/logSlice';
+import { fetchLog, resetSlice } from './redux/logSlice';
+import { SpinnerComp } from "./SpinnerComp"
 import './App.css'
 
 const Log = ({ selectedDevice }) => {
     const { log } = useSelector((state) => state.log);
+    const [displaySpinner, setDisplaySpinner] = useState("none");
     const dispatch = useDispatch();
     
     useEffect (() => {
         const getInfo = async () => {
             // debugger;
-            dispatch(fetchLog( selectedDevice ? selectedDevice : []));
+            if (selectedDevice) {
+                setDisplaySpinner("block");
+                await dispatch(fetchLog(selectedDevice));
+                setDisplaySpinner("none");
+            } else {
+                dispatch(resetSlice());
+            }
         }
         getInfo();
     }, [selectedDevice]);
 
     return (
-        <div>
-            <h3>Log (Packets Summary):</h3>   
+        <div style={{width: '100%', backgroundColor: '#8b7a7aff', flexGrow: 0, maxHeight: '68%', padding: '0.5rem', borderRadius: '8px', marginBottom: '1rem'}}>
+            <h5>Log (Packets Summary)</h5>
             { log.length > 0 ? (
-                <table style={{fontSize: '0.7rem', display: 'block', width: 'fit-content', maxHeight: '20rem', overflowY: 'auto', borderCollapse: 'collapse'}}>
-                    <thead>
+                <table style={{fontSize: '0.7rem', display: 'block', maxHeight: '90%', overflowY: 'auto', borderCollapse: 'collapse'}}>
+                    <tbody style={{display: 'table', width: '100%'}}>
                         <tr style={{position: 'sticky', top: 0, backgroundColor: '#8b7070ff'}}>
                             <th>Time</th>
                             <th>src-mac</th>
@@ -30,8 +38,6 @@ const Log = ({ selectedDevice }) => {
                             <th>protocol</th>
                             <th>dns_qry</th>
                         </tr>
-                    </thead>
-                    <tbody>
                         {log.map((logItem, index) => (
                             <tr key={index} >
                                 <td>{logItem.timestamp}</td>

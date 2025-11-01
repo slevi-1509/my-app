@@ -5,7 +5,7 @@ export const fetchAnomalies = createAsyncThunk(
   async () => {
     const SERVER_URL = 'http://localhost:8000';
     const res = await fetch(`${SERVER_URL}/anomalies`);
-    const data = await res.json();
+    const data = res.json();
     return data; // this is an array
   }
 );

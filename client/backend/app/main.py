@@ -2,7 +2,6 @@ import uvicorn
 from fastapi import FastAPI
 from scapy import interfaces
 from fastapi.middleware.cors import CORSMiddleware
-# from fastapi.responses import StreamingResponse
 import threading
 from routes import routers
 from kafka_consumer.consumer import consume_messages

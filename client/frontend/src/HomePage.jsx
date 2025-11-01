@@ -9,6 +9,8 @@ import { fetchDevices, setSelectedDevice } from './redux/devicesSlice';
 import { fetchAnomalies } from './redux/anomaliesSlice';
 import Anomalies from './Anomalies';
 import DevicesComp from './DevicesComp';
+import Stream from './Stream';
+import { SpinnerComp } from "./SpinnerComp"
 import './App.css'
 
 let router_mac = ''
@@ -18,28 +20,24 @@ const HomePage = () => {
   const { interfaces } = useSelector((state) => state.interfaces);
   const { devices, selectedDevice } = useSelector((state) => state.devices);
   const [parameters, setParameters] = useState({});
-  // const [iotProbability, setIotProbability] = useState();
-  // const [selectedDevice, setSelectedDevice] = useState({});
-  const [messages, setMessages] = useState([]);
-  const [socket, setSocket] = useState(null);
-  const [inputMessage, setInputMessage] = useState('');
+  const [displaySpinner, setDisplaySpinner] = useState(false);
+  const [showAConsole, setShowConsole] = useState(false);
+  const [endSubmit, setEndSubmit] = useState(false);
+  const [aiReply, setAiReply] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchData = () => {
-      // dispatch(setRouterMac(parameters.interface));
-      // setIotProbability(parameters.iot_probability);
-      // debugger;
-      getDevices();
       setParameters(getInitialValues(interfaces));
+      getDevices();
     };
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const intervalId = setInterval(getDevices, 20000); // Poll every 10 seconds
-    return () => clearInterval(intervalId);
-  }, []);
+  // useEffect(() => {
+  //   const intervalId = setInterval(getDevices, 30000); // Poll every 30 seconds
+  //   return () => clearInterval(intervalId);
+  // }, []);
 
   const getInitialValues = (interfaces) => {
     let parameters_initial = {};
@@ -62,14 +60,13 @@ const HomePage = () => {
     return parameters_initial;
   }
 
-  const getDevices = () => {
-    dispatch(fetchDevices(router_mac));
-    dispatch(fetchAnomalies());
+  const getDevices = async () => {
+    // debugger;
+    setDisplaySpinner(true);
+    await dispatch(fetchDevices(router_mac));
+    await dispatch(fetchAnomalies());
+    setDisplaySpinner(false);
   }
-
-  // const getAnomalies = () => {
-    
-  // }
 
   const handleSelect = (e) => {
     let { value, name } = e.target;
@@ -80,6 +77,7 @@ const HomePage = () => {
       value = e.target.checked;
     }
     if (name === 'interface'){
+      // debugger;
       value = e.target.value;
       if (value !== '') {
         router_mac = value
@@ -95,12 +93,12 @@ const HomePage = () => {
     dispatch(setSelectedDevice(""));
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    // parameters['iot_probability'] = iotProbability;
     try {
-      // sendMessage(JSON.stringify({'action': 'start_sniffer', 'parameters': parameters}));
-      let response = await axios.post(`http://localhost:8000/runsniffer`, parameters);
+      let response = axios.post(`http://localhost:8000/runsniffer`, parameters);
+      // debugger;
+      setEndSubmit(true)
     } catch (error) {
       console.log(error.message);
     }
@@ -108,8 +106,10 @@ const HomePage = () => {
 
   const handleStop = async (e) => {
     e.preventDefault();
+    // setEndSubmit(false)
     try {
       let response = await axios.post(`http://localhost:8000/stopsniffer`, parameters);
+      setEndSubmit(false);
     } catch (error) {
       console.log(error.message);
     }
@@ -119,6 +119,8 @@ const HomePage = () => {
     e.preventDefault();
     try {
       let response = await axios.get(`http://localhost:8000/deletedb`);
+      alert('Database deleted successfully!');
+      // window.location.reload();
     } catch (error) {
       console.log(error.message);
     }
@@ -131,25 +133,25 @@ const HomePage = () => {
   };
 
   return (
-    <div style={{ display: 'flex', gap: '2rem', flexDirection: 'row', alignItems: 'flex-start' }}>
-      <div>
+    <div style={{ display: 'flex', gap: '1rem', flexDirection: 'row', alignItems: 'flex-start', margin: '1rem', height: '53rem', backgroundColor: '#222020', padding: '0.5rem', borderRadius: '8px', minWidth: '76rem' }}>
+      <div style={{width: '30rem'}}>
         <Stack spacing={1} direction="row">
             <Link to={`devices/${parameters.interface}`} >
                 More data...
             </Link>
-            <button type="button" style={{ fontSize: '0.5rem', marginLeft: '4rem'}} onClick={handleDeleteDb}> Delete DB </button>
+            <button type="button" style={{ fontSize: '0.5rem', marginLeft: '10rem'}} onClick={handleDeleteDb}> Delete DB </button>
         </Stack>
-        <h3>IoT Anomalies Detector</h3>
+        <br/>
+        <h2 style={{fontFamily: 'fantasy', color: 'yellow'}}>IoT Anomalies Detector</h2>
         {/* <br/>
         <button type="button" onClick={()=>{setRemoteIpChange(!remoteIpChange)}}>Set Remote IP</button>
         <input type="text" id="remoteIp" name="remoteIp" value={remoteIp} onChange={(e) => setRemoteIp(e.target.value)} />
         <br/> */}
-        <br/>
-        <div className='settings-container' style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
           <div>
             { interfaces.length > 0 &&
               <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <h3>Interface List</h3>
+                <h4 style={{color: 'lightgreen'}}>Interface List</h4>
                 <label htmlFor="interface">Select an interface:</label>
                 <select name="interface" id="interface" value={parameters.interface} onChange={handleSelect}>
                   {interfaces.map((item, index) => (
@@ -160,7 +162,7 @@ const HomePage = () => {
             }
             <br/>
             <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <h3>Options:</h3>
+              <h4 style={{color: 'lightgreen'}}>Options</h4>
               <label htmlFor="interval">Set interval (seconds): </label>
               <input type="number" id="interval" name="interval" defaultValue={parameters.interval} min="0" onChange={handleSelect} />
               <label htmlFor="no_of_packets">Set number of packets: </label>
@@ -169,11 +171,12 @@ const HomePage = () => {
               <input type="number" id="no_of_sessions" name="no_of_sessions" defaultValue={parameters.no_of_sessions} min="1" onChange={handleSelect} />
               <label htmlFor="collect_data_time">Set devices collection data time (seconds): </label>
               <input type="number" id="collect_data_time" name="collect_data_time" defaultValue={parameters.collect_data_time} min="600" onChange={handleSelect} />
+              <br/>
               <label><input type="checkbox" name="ports_scan" checked={parameters.ports_scan} onChange={handleSelect} /> Ports Scanning</label>
               <label><input type="checkbox" name="os_detect" checked={parameters.os_detect} onChange={handleSelect} /> Deep OS detection (slower)</label>
-              <div className="slidecontainer" style={{width: "12rem"}}>
-                  <label htmlFor="iot_probability" style={{fontSize: '0.9rem'}}>Minimum IoT Probability: <strong>{parameters.iot_probability}</strong></label>
-                  <div id="iot_probability">
+              <div className="slidecontainer" style={{width: "15rem"}}>
+                  <label htmlFor="iot_probability" style={{marginTop: '0.5rem', fontSize: '1rem'}}>Minimum IoT Probability: <strong>{parameters.iot_probability}</strong></label>
+                  <div id="iot_probability" style={{marginLeft: '0.5rem', width: '11rem'}}>
                     <Slider 
                         name="iot_probability"
                         min={0}
@@ -186,30 +189,19 @@ const HomePage = () => {
                     />
                   </div>
               </div>
-              <section style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: '1rem', marginTop: '1rem' }}>
-                <button type="submit" value="Submit" onClick={handleSubmit}> Submit </button>
+              <section style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: '1rem', marginTop: '0', height: '3rem' }}>
+                <button type="submit" value="Submit" disabled={endSubmit} onClick={handleSubmit}> Submit </button>
                 <button type="stop" onClick={handleStop}> Stop </button>
+                {displaySpinner && <SpinnerComp/>}
               </section>
+              <Stream getDevices={getDevices} setEndSubmit={setEndSubmit} />
             </section>
           </div>
-          {/* <div className='chat-box' style={{ marginLeft: '2rem', border: '1px solid yellow', padding: '1rem', width: '55%', height: '20rem', overflowY: 'scroll' }}>
-            <h4>WebSocket Chat</h4>
-            {messages.map((msg, index) => (
-              <p key={index}>{msg}</p>
-            ))}
-          </div> */}
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#383333', height: '50rem' }}>
-        <h4>Devices <span style={{ fontSize: '1.2rem', color: 'gray' }}>(on router: {parameters.interface})</span> </h4>
-        {Object.keys(devices).length > 0 ? (
-          <DevicesComp iot={parameters.iot_probability} />
-        ) : (
-          <p>No devices found.</p>
-        )}
-        <br/>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', backgroundColor: '#383333', width: '100%', height: '100%', padding: '0.5rem' ,borderRadius: '8px'}}>
+        <DevicesComp parameters={parameters} />
         <Anomalies selectedDevice={selectedDevice} />
-        <br/> 
       </div>
     </div>
   )

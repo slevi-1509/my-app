@@ -12,9 +12,10 @@ KAFKA_TOPIC = 'local_server_to_dispatcher'
 PRODUCER_CLIENT_ID = 'fastapi_producer'
 OPEN_AI_KEY = os.environ.get('OPEN_AI_KEY', config.OPEN_AI_KEY)
 
-def send_message(message: ProduceMessage):
+def produce_message(message: ProduceMessage):
     value = message.model_dump_json().encode('utf-8')
     producer = Producer({'bootstrap.servers': KAFKA_BROKER_URL})
     producer.produce(KAFKA_TOPIC, key=OPEN_AI_KEY, value=value)
+    config.msg_to_client = "Message sent to Dispatcher"
     logger.info(f"Message sent to topic {KAFKA_TOPIC}")
     producer.flush()

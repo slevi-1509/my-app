@@ -1,5 +1,8 @@
 from fastapi import APIRouter ,Request, WebSocket, WebSocketDisconnect
 from scapy import interfaces
+# from sse_starlette.sse import EventSourceResponse
+from fastapi.responses import StreamingResponse
+import asyncio
 import os
 import time
 import json
@@ -11,6 +14,28 @@ from utils.utils import start_sniffer, get_devices_from_redis
 
 router = APIRouter()
 
+async def event_generator():
+    # counter = 0
+    prev_msg = ""
+    while True:
+        # Simulate some asynchronous work or data generation
+        await asyncio.sleep(1) 
+        # counter += 1
+        # message = {"data": f"{counter}"}
+        # yield f"data: {json.dumps(message)}\n\n"
+        if prev_msg != config.msg_to_client:
+            # counter += 1
+            message = {"data": f"{config.msg_to_client}"}
+            # SSE messages must be formatted as "data: <message>\n\n"
+            # You can also include an "event:" line for custom event types
+            yield f"data: {json.dumps(message)}\n\n"
+            prev_msg = config.msg_to_client
+            config.msg_to_client = ""
+        
+@router.get("/stream")
+async def sse_endpoint():
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+            
 @router.get("/")
 def read_root(request: Request):
     return {"message": "Welcome to the API "}
@@ -24,22 +49,14 @@ def getIfString():
     found_working_interfaces = interfaces.get_if_list()
     return found_working_interfaces
 
-@router.get("/devices")
-def getDevices(request: Request):
-    # print("devices", config.registered_devices)
-    return config.registered_devices
+# @router.get("/devices")
+# def getDevices(request: Request):
+#     # print("devices", config.registered_devices)
+#     return config.registered_devices
 
 @router.get("/devices{mac}")
 def getDevice(request: Request, mac: str):
     return get_devices_from_redis(mac)
-    # r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
-    # config.registered_devices.clear()
-    # for key in r.scan_iter("*"):
-    #     field_value = r.hget(key, 'router_mac')
-    #     if mac == field_value:
-    #         record = r.hgetall(key)   # get the whole record
-    #         config.registered_devices[key] = record
-    # return config.registered_devices
 
 @router.get("/anomalies")
 def getAnomalies(request: Request, response_model=list[str]):
@@ -47,19 +64,14 @@ def getAnomalies(request: Request, response_model=list[str]):
     keys = r.scan_iter("*")  
     anomalies = []
     for key in keys:
-        # values = r.lrange(key, 0, -1)  # get all values in the list
         values = [json.loads(v) for v in r.lrange(key, 0, -1)]  # convert JSON strings to Python objects
         anomalies.extend(values)
-    # print(anomalies)
     return anomalies
 
 @router.get("/log{mac}")
 def getDeviceLog(request: Request, mac: str, response_model=list[str]):
     r = redis.Redis(host=config.AWS_SERVER_IP, port=config.REDIS_PACKETS_PORT, password=config.REDIS_PASSWORD, decode_responses=True)
-    # device_log = []
-    # values = r.lrange(key, 0, -1)  # get all values in the list
     values = [json.loads(v) for v in r.lrange(mac, 0, -1)]  # convert JSON strings to Python objects
-    # device_log.extend(values)
     return values
 
 @router.get("/deletedb")

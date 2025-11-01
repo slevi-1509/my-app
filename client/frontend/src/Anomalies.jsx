@@ -24,12 +24,12 @@ const Anomalies = ({ selectedDevice }) => {
     }, [anomalies, selectedDevice]);
 
     return (
-        <div>
-            <h3>Anomalies <span style={{ fontSize: '1.2rem', color: 'gray' }}>({anomalies_title})</span></h3>
+        <div style={{display: 'flex', flexDirection: 'column', minHeight: 0, width: '100%', backgroundColor: '#8f4f4fff', flexGrow: 1, maxHeight: '88%', padding: '0.5rem', borderRadius: '8px', marginBottom: '0.5rem'}}>
+            <h5>Anomalies <span style={{ fontSize: '1rem', color: 'darkgray' }}>({anomalies_title})</span></h5>
             { anomaliesToShow.length > 0 ? (
-                <table style={{fontSize: '0.7rem', display: 'block', width: 'fit-content', maxHeight: '20rem', overflowY: 'auto', borderCollapse: 'collapse'}}>
-                    <thead>
-                        <tr style={{position: 'sticky', top: 0, backgroundColor: '#8b7070ff'}}>
+                <table style={{fontSize: '0.7rem', display: 'block', maxHeight: '94%', overflowY: 'auto', borderCollapse: 'collapse'}}>
+                    <tbody style={{display: 'table', width: '100%'}}>
+                        <tr style={{position: 'sticky', top: -1, backgroundColor: '#8b7070ff'}}>
                             <th>Time</th>
                             <th>src-mac</th>
                             <th>src-ip</th>
@@ -38,19 +38,17 @@ const Anomalies = ({ selectedDevice }) => {
                             <th>protocol</th>
                             <th>dns_qry</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                    {anomaliesToShow.map((anomaly, index) => (
-                        <tr key={index} >
-                            <td>{anomaly.timestamp}</td>
-                            <td>{anomaly.src_mac}</td>
-                            <td>{anomaly.src_ip}</td>
-                            <td>{anomaly.dst_mac}</td>
-                            <td>{anomaly.dst_ip}</td>
-                            <td>{anomaly.protocol}</td>
-                            <td>{anomaly.dns_query}</td>
-                        </tr>
-                    ))}
+                        {anomaliesToShow.map((anomaly, index) => (
+                            <tr key={index} >
+                                <td>{anomaly.timestamp}</td>
+                                <td>{anomaly.src_mac}</td>
+                                <td>{anomaly.src_ip}</td>
+                                <td>{anomaly.dst_mac}</td>
+                                <td>{anomaly.dst_ip}</td>
+                                <td>{anomaly.protocol}</td>
+                                <td>{anomaly.dns_query}</td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             ) : (

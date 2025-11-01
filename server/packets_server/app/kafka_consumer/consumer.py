@@ -5,6 +5,7 @@ import os
 import logging
 import redis
 import json
+from kafka_producer.producer import send_message
 import config
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -95,6 +96,7 @@ def connect_redis(collect_data_time, packets):
                     handle_anomaly(item, key)
                 r.rpush(key, json.dumps(item))
                 logger.info(f"New packet added to {key}")
+    send_message()
                 
 def handle_anomaly(packet, mac):
     logger.warning(f"Anomaly detected: {packet}")

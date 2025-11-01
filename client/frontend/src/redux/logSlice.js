@@ -10,30 +10,38 @@ export const fetchLog = createAsyncThunk(
   }
 );
 
-const logSlice = createSlice({
-    name: 'log',
-    initialState: {
-        log: [],   // will hold the fetched array
-        status: 'idle',   // idle | loading | succeeded | failed
-        error: null
-    },
-      reducers: {},
-      extraReducers: (builder) => {
-        builder
-          .addCase(fetchLog.pending, (state) => {
-            state.status = 'loading';
-          })
-          .addCase(fetchLog.fulfilled, (state, action) => {
-            state.status = 'succeeded';
-            state.log = action.payload; // put the array into state
-          })
-          .addCase(fetchLog.rejected, (state, action) => {
-            state.status = 'failed';
-            state.error = action.error.message;
-          });
-      }
-    });
+const initialState = {
+  log: [],   // will hold the fetched array
+  status: 'idle',   // idle | loading | succeeded | failed
+  error: null
+};
 
-    export default logSlice.reducer;
-    export const selectAllLog = (state) => state.log.log;
-    export const getLogStatus = (state) => state.log.status;
+const logSlice = createSlice({
+  name: 'log',
+  initialState,
+  reducers: {
+    resetSlice: (state) => {
+      return initialState; // Reset the entire slice state to its initial state
+    },
+  },
+
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchLog.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchLog.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.log = action.payload; // put the array into state
+      })
+      .addCase(fetchLog.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      });
+  }
+});
+
+  export default logSlice.reducer;
+  export const { resetSlice } = logSlice.actions;
+  export const selectAllLog = (state) => state.log.log;
+  export const getLogStatus = (state) => state.log.status;
